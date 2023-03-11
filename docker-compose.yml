@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+
+  mysqldb:
+    image: mysql:5.7
+    container_name: mysqldb
+    restart: always
+    volumes:
+      - ${DOCKER_MYSQL_VOLUME:-/opt/db_data}:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: diplomovka
+      MYSQL_ROOT_PASSWORD: 1234
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysqldb
+      DB_READ_HOST: mysqldb
+    ports:
+      - "3400:80"
+    depends_on:
+      - mysqldb
+
+  app:
+    container_name: Express
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/var/www/html
+    restart: always
+    ports:
+      - "3000:3000"
+    working_dir: /var/www/html
+    environment:
+      MYSQL_HOST: mysqldb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 1234
+      MYSQL_PORT: 3306
+

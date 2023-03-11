@@ -1,88 +1,82 @@
 const express = require('express');
-const cors = require('cors');
-const mysql = require('mysql');
-require('dotenv').config();
+const Sequelize = require ('sequelize')
 const app = express();
-app.use(cors());
 app.use(express.json());
 const PORT=3000;
 
-const con = mysql.createConnection({
-    host:"localhost",
-    user:"root",
-    password:"",
-    database:"express",
+const sequelize = new Sequelize('diplomovka', 'root', '1234', {
+    host: 'mysqldb',
+    dialect: 'mysql'
+});
+
+const User = sequelize.define("users",{
+    first_name:{
+        type: Sequelize.DataTypes.STRING
+    },
+    last_name:{
+        type: Sequelize.DataTypes.STRING
+    },
+    phone_number:{
+        type: Sequelize.DataTypes.INTEGER
+    },
+    email:{
+        type: Sequelize.DataTypes.STRING
+    }
+},
+    { tableName: "users"
+    },
+    {
+     freezeTableName: true,
+     timestamps: false
+    });
+
+User.sync();
+
+
+//POST ONE USER
+
+app.post("/user/create", async (req, res) => {
+    const first_name = req.body.first_name;
+    const last_name = req.body.last_name;
+    const phone_number = req.body.phone_number;
+    const email = req.body.email;
+    const saveUser = User.build({
+        first_name,
+        last_name,
+        phone_number,
+        email
+    });
+    await saveUser.save();
+    res.send("Uzivatel pridany ");
 });
 
 
 //GET ALL USERS
-app.get('/',(req,res )  =>{
-   let sql = 'SELECT * FROM users';
 
-   con.query(sql,(error,result) =>{
-   if(error){
-       res.status(500).json({error});
-   }else {
-       res.status(200).json({result});
-   }
-   });
+app.get("/users", async (req, res) => {
+    const allUsers = await User.findAll();
+    res.json(allUsers);
 });
 
-//GET SINGLE USER
-app.get('/user/:id',(req,res )  =>{
-    let id = req.params.id;
-    let sql = 'SELECT * FROM users WHERE id = '+id;
+//UPDATE ONE USER
 
-    con.query(sql,(error,result) =>{
-        if(error){
-            res.status(500).json({error});
-        }else {
-            res.status(200).json({result});
-        }
+app.put("/user/update/:id", (req, res) => {
+    User.update(req.body, {
+        where: { id: req.params.id } });
+    res.send("Uzivatel updatovany ");
+});
+
+//DELETE ONE USER
+
+app.delete("/user/delete/:id", (req, res) => {
+    User.destroy({
+        where: {
+            id: req.params.id,
+        },
     });
+    res.send("Uzivatel vymazany ");
 });
 
-//CREATE USER
-app.post('/user',(req,res)=>{
-     const {first_name, last_name, email, phone_number} = req.body;
-     const sqlInsert = 'INSERT INTO users(first_name, last_name, email, phone_number) VALUES (?,?,?,?)';
-     con.query(sqlInsert,[first_name, last_name, email, phone_number],(error,result)=>{
-         if(error){
-             res.status(500).json({error});
-         }else {
-             res.status(201).json({message:"pouzivatel bol vytvoreny",id:result.insertId});
-         }
-     });
-});
-
-//UPDATE USER
-app.put('/user/:id',(req,res)=>{
-    let id = req.params.id;
-    const {first_name, last_name, email, phone_number} = req.body;
-    const sqlUpdate = 'UPDATE users SET first_name=?, last_name=?, email=?, phone_number=? WHERE id = '+id;
-
-    con.query(sqlUpdate,[first_name, last_name, email, phone_number],(error,result)=>{
-        if(error){
-            res.status(500).json({error});
-        }else {
-            res.status(201).json({message:"pouzivatel bol updatovany",id: id});
-        }
-    });
-});
-
-//DELETE USER
-app.delete('/user/:id',(req,res)=>{
-    let id = req.params.id;
-    const sqlDelete = 'DELETE FROM users WHERE id = '+id;
-
-    con.query(sqlDelete,(error,result)=>{
-        if(error){
-            res.status(500).json({error});
-        }else {
-            res.status(200).json({message:"pouzivatel bol vymazany",succes: true});
-        }
-    });
-});
 
 
 app.listen(PORT);
