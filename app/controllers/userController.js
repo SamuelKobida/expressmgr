@@ -28,14 +28,14 @@ const getAllUsers =  async (req, res) =>{
 
 //UPDATE USER
 const updateUser =  async (req, res) =>{
-    User.update(req.body, {
+    await User.update(req.body, {
         where: { id: req.params.id } });
     res.send("Uzivatel updatovany ");
 };
 
 //DELETE USER
 const deleteUser =  async (req, res) => {
-    User.destroy({
+    await User.destroy({
         where: {
             id: req.params.id,
         },

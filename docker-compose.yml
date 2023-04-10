@@ -31,7 +31,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./:/var/www/html
+      - \\wsl.localhost\Ubuntu\home\samo\eblogmysql:/var/www/html
     restart: always
     ports:
       - "3000:3000"
